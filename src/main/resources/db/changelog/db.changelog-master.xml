@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="2026-04-20-01-create-file-metadata" author="vladko">
+        <createTable tableName="file_metadata">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_file_metadata"/>
+            </column>
+            <column name="category" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uploaded_by" type="varchar(128)"/>
+            <column name="bucket_name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="object_key" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="original_filename" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size_bytes" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checksum_sha256" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="etag" type="varchar(255)"/>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="timestamp"/>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="file_metadata"
+                columnNames="bucket_name, object_key"
+                constraintName="ux_file_metadata_bucket_object_key"/>
+
+        <createIndex tableName="file_metadata" indexName="ix_file_metadata_owner">
+            <column name="owner_type"/>
+            <column name="owner_id"/>
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="file_metadata" indexName="ix_file_metadata_status_created_at">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="file_metadata" indexName="ix_file_metadata_checksum">
+            <column name="checksum_sha256"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

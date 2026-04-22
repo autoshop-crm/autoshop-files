@@ -1,0 +1,34 @@
+services:
+  files-postgres:
+    image: postgres:16-alpine
+    container_name: autoshop-files-postgres
+    environment:
+      POSTGRES_DB: files_db
+      POSTGRES_USER: ${FILES_DB_USERNAME:?Set FILES_DB_USERNAME in .env}
+      POSTGRES_PASSWORD: ${FILES_DB_PASSWORD:?Set FILES_DB_PASSWORD in .env}
+    ports:
+      - "5433:5432"
+    volumes:
+      - files_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FILES_DB_USERNAME} -d files_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: autoshop-files-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - files_minio_data:/data
+
+volumes:
+  files_postgres_data:
+  files_minio_data:
