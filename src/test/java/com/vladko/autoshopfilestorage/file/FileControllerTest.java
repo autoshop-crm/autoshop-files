@@ -2,6 +2,7 @@ package com.vladko.autoshopfilestorage.file;
 
 import com.vladko.autoshopfilestorage.bucket.FileCategory;
 import com.vladko.autoshopfilestorage.common.GlobalExceptionHandler;
+import com.vladko.autoshopfilestorage.config.WebCorsConfiguration;
 import com.vladko.autoshopfilestorage.file.dto.FileMetadataResponse;
 import com.vladko.autoshopfilestorage.file.dto.OwnerFilesResponse;
 import com.vladko.autoshopfilestorage.file.dto.PresignedUrlResponse;
@@ -22,12 +23,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FileController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, WebCorsConfiguration.class})
 class FileControllerTest {
 
     @Autowired
@@ -85,6 +88,21 @@ class FileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.url").value("http://localhost:9000/documents/key"))
                 .andExpect(jsonPath("$.expiresInSeconds").value(900));
+    }
+
+    @Test
+    void allowsCorsPreflightForUpload() throws Exception {
+        mockMvc.perform(options("/api/files")
+                        .header("Origin", "http://localhost:5173")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("POST")))
+                .andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsStringIgnoringCase("authorization"),
+                        org.hamcrest.Matchers.containsStringIgnoringCase("content-type")
+                )));
     }
 
     private FileMetadataResponse response(UUID fileId) {
